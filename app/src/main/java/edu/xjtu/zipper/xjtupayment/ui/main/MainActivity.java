@@ -14,6 +14,7 @@ import android.os.Bundle;
 
 import androidx.lifecycle.Observer;
 import edu.xjtu.zipper.xjtupayment.R;
+import edu.xjtu.zipper.xjtupayment.data.TokenHolder;
 import edu.xjtu.zipper.xjtupayment.tool.TempTokenManager;
 import edu.xjtu.zipper.xjtupayment.data.XJTUUser;
 import edu.xjtu.zipper.xjtupayment.data.XjtuUserImportException;
@@ -71,21 +72,28 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setDefaultTextEncodingName("utf-8");
         webSettings.setDisplayZoomControls(false);
         webView.addJavascriptInterface(this,"android");
-        webView.loadUrl("https://bilibili.com");
-        webView.onResume();
-        tempTokenManager.getCode().observe(this, new Observer<String>() {
+        webView.setWebViewClient(new WebViewClient(){
             @Override
-            public void onChanged(String s) {
-                if(Objects.equals(s,"loginexpired"))
+
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl){
+                view.reload();
+            }
+
+        });
+        webView.onResume();
+        tempTokenManager.getCode().observe(this, new Observer<TokenHolder>() {
+            @Override
+            public void onChanged(TokenHolder s) {
+                if(s.getErrorType() == TokenHolder.ErrorType.expired)
                 {
                     Toast.makeText(getApplicationContext(), "未登录或登录已失效", Toast.LENGTH_LONG).show();
                     startActivity(new Intent(getApplicationContext(), LoginActivity.class));
                 }
-                while(Objects.equals(s,"failed")){
+                while(s.getErrorType() == TokenHolder.ErrorType.failed){
                     tempTokenManager.refreshCode(Objects.requireNonNull(XJTUUser.getActiveUser().getValue()).getPersonToken());
                 }
-                webView.loadUrl("https://org.xjtu.edu.cn/h5/campuscard.html?comeAcc="+ XJTUUser.getActiveUser().getValue().getSno() +"&code="+s);
-                Log.d("url","https://org.xjtu.edu.cn/h5/campuscard.html?comeAcc="+ XJTUUser.getActiveUser().getValue().getSno() +"&code="+s);
+                webView.loadUrl("https://org.xjtu.edu.cn/h5/campuscard.html?comeAcc="+ XJTUUser.getActiveUser().getValue().getSno() +"&code="+s.getContent());
+                Log.d("url","https://org.xjtu.edu.cn/h5/campuscard.html?comeAcc="+ XJTUUser.getActiveUser().getValue().getSno() +"&code="+s.getContent());
             }
         });
         XJTUUser.getActiveUser().observe(this, new Observer<XJTUUser>() {

@@ -35,8 +35,8 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d("activity","login activity created");
         super.onCreate(savedInstanceState);
-
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         loginTool = new LoginTool();
@@ -67,7 +67,6 @@ public class LoginActivity extends AppCompatActivity {
         loginTool.getLoginResult().observe(this, new Observer<LoginResult>() {
             @Override
             public void onChanged(@Nullable LoginResult loginResult) {
-
                 if (loginResult == null) {
                     return;
                 }
@@ -87,6 +86,7 @@ public class LoginActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                     setResult(Activity.RESULT_OK);
+                    Log.i("LoginActivity","login success and quit");
                     finish();
                 }
                 else {
